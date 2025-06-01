@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/url"
 
 	"cerberus.com/ws-schedule-scraper/calendar"
 	"cerberus.com/ws-schedule-scraper/config"
@@ -26,12 +25,7 @@ func main() {
 		log.Fatalf("unable to parse ennvironment variables: %e", err)
 	}
 
-	parsedUrl, err := url.Parse(cfg.TargetUrl)
-	if err != nil {
-		fmt.Errorf("Could not parse input as URL. got=%q", cfg.TargetUrl)
-	}
-	scraper := scraper.New(*parsedUrl, cfg.ScraperTimeout)
-
+	scraper := scraper.New(&cfg)
 	showResults := scraper.Scrape()
 
 	fmt.Println("-------- WATER SPOTS WEBSITE EVENTS --------")
@@ -43,7 +37,8 @@ func main() {
 	fmt.Println()
 	fmt.Println("-------- GOOGLE CALENDAR EVENTS --------")
 
-	calendar.GetEvents(cfg)
+	cal := calendar.New(&cfg)
+	cal.GetEvents()
 
 	// TODO: Merge events
 
