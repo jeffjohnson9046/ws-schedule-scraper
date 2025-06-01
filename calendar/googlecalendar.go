@@ -11,19 +11,29 @@ import (
 	"google.golang.org/api/option"
 )
 
-func GetEvents(config config.AppConfig) {
+type GoogleCalendar struct {
+	CalendarId      string
+	CredentialsFile string
+	MaxResults      int64
+}
+
+func New(config *config.AppConfig) *GoogleCalendar {
+	return &GoogleCalendar{CalendarId: config.CalendarId, CredentialsFile: config.CredentialsFile, MaxResults: config.MaxResults}
+}
+
+func (cal *GoogleCalendar) GetEvents() {
 	ctx := context.Background()
 
-	calendarService, err := calendar.NewService(ctx, option.WithCredentialsFile(config.CredentialsFile))
+	calendarService, err := calendar.NewService(ctx, option.WithCredentialsFile(cal.CredentialsFile))
 	if err != nil {
 		log.Fatalf("Could not get calendar service: %v", err)
 	}
 
 	t := time.Now().Format(time.RFC3339)
-	events, err := calendarService.Events.List(config.CalendarId).
+	events, err := calendarService.Events.List(cal.CalendarId).
 		SingleEvents(true).
 		TimeMin(t).
-		MaxResults(config.MaxResults).
+		MaxResults(cal.MaxResults).
 		OrderBy("startTime").
 		Do()
 	if err != nil {
@@ -40,12 +50,7 @@ func GetEvents(config config.AppConfig) {
 				date = item.Start.Date
 			}
 
-			parsedTime, err := time.Parse(time.RFC3339, date)
-			if err != nil {
-				log.Fatalf("could not parse time. got=%s", date)
-			}
-
-			fmt.Printf("%v (%v), parsed: %v\n", item.Summary, date, parsedTime)
+			fmt.Printf("%v (%v)\n", item.Summary, date)
 		}
 	}
 }
