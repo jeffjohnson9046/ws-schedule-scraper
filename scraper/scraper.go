@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"time"
 
+	"cerberus.com/ws-schedule-scraper/config"
 	"github.com/gocolly/colly"
 )
 
@@ -14,8 +15,13 @@ type Scraper struct {
 	Timeout int
 }
 
-func New(url url.URL, timeout int) *Scraper {
-	return &Scraper{Url: url, Timeout: timeout}
+func New(config *config.AppConfig) *Scraper {
+	parsedUrl, err := url.Parse(config.TargetUrl)
+	if err != nil {
+		fmt.Errorf("Could not parse input as URL. got=%q", config.TargetUrl)
+	}
+
+	return &Scraper{Url: *parsedUrl, Timeout: config.ScraperTimeout}
 }
 
 func (scraper *Scraper) Scrape() []ShowInfo {
