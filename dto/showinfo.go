@@ -13,7 +13,7 @@ type ShowInfo struct {
 }
 
 func (show *ShowInfo) String() string {
-	return fmt.Sprintf("Water Spots at %s %s", show.Venue, show.Times)
+	return fmt.Sprintf("Water Spots @ %s %s", show.Venue, show.Times)
 }
 
 func (showInfo *ShowInfo) ToScheduleEvent() ScheduleEvent {
