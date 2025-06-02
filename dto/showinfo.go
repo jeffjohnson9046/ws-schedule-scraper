@@ -13,7 +13,7 @@ type ShowInfo struct {
 }
 
 func (show *ShowInfo) String() string {
-	return fmt.Sprintf("The Water Spots at %s %s", show.Venue, show.Times)
+	return fmt.Sprintf("Water Spots at %s %s", show.Venue, show.Times)
 }
 
 func (showInfo *ShowInfo) ToScheduleEvent() ScheduleEvent {
@@ -23,7 +23,7 @@ func (showInfo *ShowInfo) ToScheduleEvent() ScheduleEvent {
 	}
 
 	// TODO: pretty sure startDate.Format(-- the pattern --) should work here, but startDate.format("2006-01-01") kept giving back the same date, regardless of input
-	formattedDate := fmt.Sprintf("%d-%02d-%02d", startDate.Year(), startDate.Month(), startDate.Day())
+	formattedDate := startDate.Format("2006-01-02")
 
 	return ScheduleEvent{Summary: showInfo.String(), DateTime: formattedDate}
 }
