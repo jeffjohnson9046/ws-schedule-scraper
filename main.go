@@ -15,29 +15,29 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalf("Error loading .env file: %e", err)
 	}
 
-	cfg := config.AppConfig{}
+	appConfig := config.AppConfig{}
 
-	err = env.Parse(&cfg)
+	err = env.Parse(&appConfig)
 	if err != nil {
 		log.Fatalf("unable to parse ennvironment variables: %e", err)
 	}
 
-	scraper := scraper.New(&cfg)
-	showResults := scraper.Scrape()
+	scraper := scraper.New(&appConfig)
+	scheduledShowResults := scraper.Scrape()
 
 	fmt.Println("-------- WATER SPOTS WEBSITE EVENTS --------")
 
-	for _, show := range showResults {
-		fmt.Println(show.String())
+	for _, scheduledShow := range scheduledShowResults {
+		fmt.Println(scheduledShow.String())
 	}
 
 	fmt.Println()
 	fmt.Println("-------- GOOGLE CALENDAR EVENTS --------")
 
-	googleCalendar := calendar.NewGoogleCalendar(&cfg)
+	googleCalendar := calendar.NewGoogleCalendar(&appConfig)
 	events := googleCalendar.GetEvents()
 	fmt.Println(events)
 
