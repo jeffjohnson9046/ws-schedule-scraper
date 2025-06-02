@@ -37,8 +37,9 @@ func main() {
 	fmt.Println()
 	fmt.Println("-------- GOOGLE CALENDAR EVENTS --------")
 
-	cal := calendar.New(&cfg)
-	cal.GetEvents()
+	googleCalendar := calendar.NewGoogleCalendar(&cfg)
+	events := googleCalendar.GetEvents()
+	fmt.Println(events)
 
 	// TODO: Merge events
 

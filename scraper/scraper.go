@@ -25,7 +25,7 @@ func New(config *config.AppConfig) *Scraper {
 }
 
 func (scraper *Scraper) Scrape() []ShowInfo {
-	shows := []ShowInfo{}
+	shows := make([]ShowInfo, 0)
 	c := colly.NewCollector()
 	c.SetRequestTimeout(time.Duration(scraper.Timeout) * time.Second)
 

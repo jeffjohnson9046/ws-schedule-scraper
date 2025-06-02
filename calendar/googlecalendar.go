@@ -2,7 +2,6 @@ package calendar
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -17,11 +16,12 @@ type GoogleCalendar struct {
 	MaxResults      int64
 }
 
-func New(config *config.AppConfig) *GoogleCalendar {
+func NewGoogleCalendar(config *config.AppConfig) *GoogleCalendar {
 	return &GoogleCalendar{CalendarId: config.CalendarId, CredentialsFile: config.CredentialsFile, MaxResults: config.MaxResults}
 }
 
-func (cal *GoogleCalendar) GetEvents() {
+func (cal *GoogleCalendar) GetEvents() []Event {
+	events := make([]Event, 0)
 	ctx := context.Background()
 
 	calendarService, err := calendar.NewService(ctx, option.WithCredentialsFile(cal.CredentialsFile))
@@ -30,7 +30,7 @@ func (cal *GoogleCalendar) GetEvents() {
 	}
 
 	t := time.Now().Format(time.RFC3339)
-	events, err := calendarService.Events.List(cal.CalendarId).
+	calendarEvents, err := calendarService.Events.List(cal.CalendarId).
 		SingleEvents(true).
 		TimeMin(t).
 		MaxResults(cal.MaxResults).
@@ -40,17 +40,14 @@ func (cal *GoogleCalendar) GetEvents() {
 		log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
 	}
 
-	fmt.Println("Upcoming events:")
-	if len(events.Items) == 0 {
-		fmt.Println("No upcoming events found.")
-	} else {
-		for _, item := range events.Items {
-			date := item.Start.DateTime
-			if date == "" {
-				date = item.Start.Date
-			}
-
-			fmt.Printf("%v (%v)\n", item.Summary, date)
+	for _, item := range calendarEvents.Items {
+		date := item.Start.DateTime
+		if date == "" {
+			date = item.Start.Date
 		}
+
+		events = append(events, Event{Summary: item.Summary, DateTime: date})
 	}
+
+	return events
 }
