@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cerberus.com/ws-schedule-scraper/config"
+	"cerberus.com/ws-schedule-scraper/dto"
 	"github.com/gocolly/colly"
 )
 
@@ -24,8 +25,8 @@ func New(config *config.AppConfig) *Scraper {
 	return &Scraper{Url: *parsedUrl, Timeout: config.ScraperTimeout}
 }
 
-func (scraper *Scraper) Scrape() []ShowInfo {
-	shows := make([]ShowInfo, 0)
+func (scraper *Scraper) Scrape() []dto.ShowInfo {
+	shows := make([]dto.ShowInfo, 0)
 	c := colly.NewCollector()
 	c.SetRequestTimeout(time.Duration(scraper.Timeout) * time.Second)
 
@@ -41,7 +42,7 @@ func (scraper *Scraper) Scrape() []ShowInfo {
 		showVenue := scheduleMarkup.ChildText("span")
 		showTimes := rgx.FindString(scheduleMarkup.Text)
 
-		show := ShowInfo{Date: showDate.Text(), Times: showTimes, Venue: showVenue}
+		show := dto.ShowInfo{Date: showDate.Text(), Times: showTimes, Venue: showVenue}
 
 		shows = append(shows, show)
 	})

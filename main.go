@@ -42,6 +42,8 @@ func main() {
 	fmt.Println(events)
 
 	// TODO: Merge events
+	//
+	googleCalendar.CreateEvents(scheduledShowResults[0:4])
 
 	// TODO: Update google calendar with:
 	// * new events
