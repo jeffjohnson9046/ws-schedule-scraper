@@ -6,6 +6,7 @@ import (
 
 	"cerberus.com/ws-schedule-scraper/calendar"
 	"cerberus.com/ws-schedule-scraper/config"
+	"cerberus.com/ws-schedule-scraper/dto"
 	"cerberus.com/ws-schedule-scraper/scraper"
 
 	"github.com/caarlos0/env"
@@ -15,34 +16,55 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalf("Error loading .env file: %e", err)
 	}
 
-	cfg := config.AppConfig{}
+	appConfig := config.AppConfig{}
 
-	err = env.Parse(&cfg)
+	err = env.Parse(&appConfig)
 	if err != nil {
 		log.Fatalf("unable to parse ennvironment variables: %e", err)
 	}
 
-	scraper := scraper.New(&cfg)
-	showResults := scraper.Scrape()
+	scraper := scraper.New(&appConfig)
+	scheduledShowResults := scraper.Scrape()
 
 	fmt.Println("-------- WATER SPOTS WEBSITE EVENTS --------")
 
-	for _, show := range showResults {
-		fmt.Println(show.String())
+	for _, scheduledShow := range scheduledShowResults {
+		fmt.Println(scheduledShow.ToScheduleEvent())
 	}
 
 	fmt.Println()
 	fmt.Println("-------- GOOGLE CALENDAR EVENTS --------")
 
-	cal := calendar.New(&cfg)
-	cal.GetEvents()
+	googleCalendar := calendar.NewGoogleCalendar(&appConfig)
+	calendarEvents := googleCalendar.GetEvents()
 
-	// TODO: Merge events
+	eventsOnCalendar := make(map[string]dto.ScheduleEvent)
+	for _, calendarEvent := range calendarEvents {
+		eventsOnCalendar[calendarEvent.DateTime] = calendarEvent
+	}
 
-	// TODO: Update google calendar with:
-	// * new events
-	// * updated events
+	eventsToCreate := make([]dto.ShowInfo, 0)
+	eventsToUpdate := make([]dto.ScheduleEvent, 0)
+	for _, scheduledShowResult := range scheduledShowResults {
+		resultAsEvent := scheduledShowResult.ToScheduleEvent()
+
+		if existingCalendarEvent, ok := eventsOnCalendar[resultAsEvent.DateTime]; ok {
+			if existingCalendarEvent.Summary != scheduledShowResult.String() {
+				existingCalendarEvent.Summary = scheduledShowResult.String()
+
+				eventsToUpdate = append(eventsToUpdate, existingCalendarEvent)
+			}
+		} else {
+			eventsToCreate = append(eventsToCreate, scheduledShowResult)
+		}
+	}
+
+	// Create new events
+	googleCalendar.CreateEvents(eventsToCreate)
+
+	// Update existing events
+	googleCalendar.UpdateEvents(eventsToUpdate)
 }
