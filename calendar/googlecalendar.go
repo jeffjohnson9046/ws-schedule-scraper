@@ -81,3 +81,25 @@ func (cal *GoogleCalendar) CreateEvents(showInfos []dto.ShowInfo) {
 		fmt.Printf(">> Created event: %s (id: %s)\n", result.Summary, result.Id)
 	}
 }
+
+func (cal *GoogleCalendar) UpdateEvents(eventsToUpdate []dto.ScheduleEvent) {
+	ctx := context.Background()
+	calendarService, err := calendar.NewService(ctx, option.WithCredentialsFile(cal.CredentialsFile))
+	if err != nil {
+		log.Fatalf("Could not get calendar service: %v", err)
+	}
+
+	for _, event := range eventsToUpdate {
+		fmt.Println(event)
+		eventDate := calendar.EventDateTime{Date: event.DateTime, TimeZone: cal.TimeZone}
+
+		eventToUpdate := calendar.Event{Id: event.EventId, Summary: event.Summary, Start: &eventDate, End: &eventDate}
+
+		result, err := calendarService.Events.Update(cal.CalendarId, eventToUpdate.Id, &eventToUpdate).Do()
+		if err != nil {
+			log.Fatalf("Unable to create event: %e", err)
+		}
+
+		fmt.Printf(">> Created event: %s (id: %s)\n", result.Summary, result.Id)
+	}
+}

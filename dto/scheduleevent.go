@@ -7,8 +7,9 @@ import (
 type ScheduleEvent struct {
 	Summary  string
 	DateTime string
+	EventId  string
 }
 
 func (se *ScheduleEvent) String() {
-	fmt.Printf("Summary: %s, DateTime: %s", se.Summary, se.DateTime)
+	fmt.Printf("(id: %s) Summary: %s, DateTime: %s", se.EventId, se.Summary, se.DateTime)
 }
