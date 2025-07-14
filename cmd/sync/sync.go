@@ -37,7 +37,7 @@ func Execute(config *config.AppConfig, calendar CalendarClient) {
 
 	websiteEventsByDate := make(map[string]dto.WebSiteEvent)
 	for _, websiteEvent := range websiteEvents {
-		websiteEventsByDate[websiteEvent.GetEventDateTime()] = websiteEvent
+		websiteEventsByDate[websiteEvent.Date] = websiteEvent
 	}
 
 	eventsToDelete := make([]dto.CalendarEvent, 0)
@@ -51,7 +51,7 @@ func Execute(config *config.AppConfig, calendar CalendarClient) {
 	}
 
 	for _, websiteEvent := range websiteEvents {
-		if existingCalendarEvent, found := calendarEventsByDate[websiteEvent.GetEventDateTime()]; found {
+		if existingCalendarEvent, found := calendarEventsByDate[websiteEvent.Date]; found {
 			if existingCalendarEvent.Summary != websiteEvent.String() {
 				existingCalendarEvent.Summary = websiteEvent.String()
 

@@ -58,7 +58,7 @@ func (cal *GoogleCalendarClient) GetEvents() []dto.CalendarEvent {
 func (cal *GoogleCalendarClient) CreateEvents(websiteEvents []dto.WebSiteEvent) {
 	newCalendarEvents := make([]dto.CalendarEvent, 0)
 	for _, websiteEvent := range websiteEvents {
-		newCalendarEvents = append(newCalendarEvents, dto.CalendarEvent{Summary: websiteEvent.String(), DateTime: websiteEvent.GetEventDateTime()})
+		newCalendarEvents = append(newCalendarEvents, dto.CalendarEvent{Summary: websiteEvent.String(), DateTime: websiteEvent.Date})
 	}
 
 	ctx := context.Background()
