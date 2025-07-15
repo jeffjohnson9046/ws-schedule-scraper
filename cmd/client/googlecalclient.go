@@ -1,4 +1,4 @@
-package calendar
+package client
 
 import (
 	"context"
@@ -7,24 +7,24 @@ import (
 	"time"
 
 	"cerberus.com/ws-schedule-scraper/config"
-	"cerberus.com/ws-schedule-scraper/dto"
+	"cerberus.com/ws-schedule-scraper/internal/dto"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 )
 
-type GoogleCalendar struct {
+type GoogleCalendarClient struct {
 	CalendarId      string
 	CredentialsFile string
 	MaxResults      int64
 	TimeZone        string
 }
 
-func NewGoogleCalendar(config *config.AppConfig) *GoogleCalendar {
-	return &GoogleCalendar{CalendarId: config.CalendarId, CredentialsFile: config.CredentialsFile, MaxResults: config.MaxResults}
+func NewGoogleCalendarClient(config *config.AppConfig) *GoogleCalendarClient {
+	return &GoogleCalendarClient{CalendarId: config.CalendarId, CredentialsFile: config.CredentialsFile, MaxResults: config.MaxResults}
 }
 
-func (cal *GoogleCalendar) GetEvents() []dto.ScheduleEvent {
-	events := make([]dto.ScheduleEvent, 0)
+func (cal *GoogleCalendarClient) GetEvents() []dto.CalendarEvent {
+	events := make([]dto.CalendarEvent, 0)
 	ctx := context.Background()
 
 	calendarService, err := calendar.NewService(ctx, option.WithCredentialsFile(cal.CredentialsFile))
@@ -49,29 +49,24 @@ func (cal *GoogleCalendar) GetEvents() []dto.ScheduleEvent {
 			date = item.Start.Date
 		}
 
-		events = append(events, dto.ScheduleEvent{Summary: item.Summary, DateTime: date})
+		events = append(events, dto.CalendarEvent{Summary: item.Summary, DateTime: date, EventId: item.Id})
 	}
 
 	return events
 }
 
-func (cal *GoogleCalendar) CreateEvents(showInfos []dto.ShowInfo) {
-	eventsToSchedule := make([]dto.ScheduleEvent, 0)
-	for _, show := range showInfos {
-		eventsToSchedule = append(eventsToSchedule, show.ToScheduleEvent())
-	}
-
+func (cal *GoogleCalendarClient) CreateEvents(websiteEvents []dto.WebSiteEvent) {
 	ctx := context.Background()
 	calendarService, err := calendar.NewService(ctx, option.WithCredentialsFile(cal.CredentialsFile))
 	if err != nil {
 		log.Fatalf("Could not get calendar service: %v", err)
 	}
 
-	for _, event := range eventsToSchedule {
+	for _, event := range websiteEvents {
 		fmt.Println(event)
-		eventDate := calendar.EventDateTime{Date: event.DateTime, TimeZone: cal.TimeZone}
+		eventDate := calendar.EventDateTime{Date: event.Date, TimeZone: cal.TimeZone}
 
-		newEvent := calendar.Event{Summary: event.Summary, Start: &eventDate, End: &eventDate}
+		newEvent := calendar.Event{Summary: event.String(), Start: &eventDate, End: &eventDate}
 
 		result, err := calendarService.Events.Insert(cal.CalendarId, &newEvent).Do()
 		if err != nil {
@@ -82,7 +77,7 @@ func (cal *GoogleCalendar) CreateEvents(showInfos []dto.ShowInfo) {
 	}
 }
 
-func (cal *GoogleCalendar) UpdateEvents(eventsToUpdate []dto.ScheduleEvent) {
+func (cal *GoogleCalendarClient) UpdateEvents(eventsToUpdate []dto.CalendarEvent) {
 	ctx := context.Background()
 	calendarService, err := calendar.NewService(ctx, option.WithCredentialsFile(cal.CredentialsFile))
 	if err != nil {
@@ -101,5 +96,23 @@ func (cal *GoogleCalendar) UpdateEvents(eventsToUpdate []dto.ScheduleEvent) {
 		}
 
 		fmt.Printf(">> Created event: %s (id: %s)\n", result.Summary, result.Id)
+	}
+}
+
+func (cal *GoogleCalendarClient) DeleteEvents(eventsToDelete []dto.CalendarEvent) {
+	ctx := context.Background()
+	calendarService, err := calendar.NewService(ctx, option.WithCredentialsFile(cal.CredentialsFile))
+	if err != nil {
+		log.Fatalf("Could not get calendar service: %v", err)
+	}
+
+	for _, event := range eventsToDelete {
+		fmt.Println(event)
+
+		err := calendarService.Events.Delete(cal.CalendarId, event.EventId).Do()
+		if err != nil {
+			log.Fatalf("Unable to delete event %e", err)
+		}
+
 	}
 }
