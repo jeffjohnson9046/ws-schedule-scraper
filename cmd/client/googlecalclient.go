@@ -56,22 +56,17 @@ func (cal *GoogleCalendarClient) GetEvents() []dto.CalendarEvent {
 }
 
 func (cal *GoogleCalendarClient) CreateEvents(websiteEvents []dto.WebSiteEvent) {
-	newCalendarEvents := make([]dto.CalendarEvent, 0)
-	for _, websiteEvent := range websiteEvents {
-		newCalendarEvents = append(newCalendarEvents, dto.CalendarEvent{Summary: websiteEvent.String(), DateTime: websiteEvent.Date})
-	}
-
 	ctx := context.Background()
 	calendarService, err := calendar.NewService(ctx, option.WithCredentialsFile(cal.CredentialsFile))
 	if err != nil {
 		log.Fatalf("Could not get calendar service: %v", err)
 	}
 
-	for _, event := range newCalendarEvents {
+	for _, event := range websiteEvents {
 		fmt.Println(event)
-		eventDate := calendar.EventDateTime{Date: event.DateTime, TimeZone: cal.TimeZone}
+		eventDate := calendar.EventDateTime{Date: event.Date, TimeZone: cal.TimeZone}
 
-		newEvent := calendar.Event{Summary: event.Summary, Start: &eventDate, End: &eventDate}
+		newEvent := calendar.Event{Summary: event.String(), Start: &eventDate, End: &eventDate}
 
 		result, err := calendarService.Events.Insert(cal.CalendarId, &newEvent).Do()
 		if err != nil {

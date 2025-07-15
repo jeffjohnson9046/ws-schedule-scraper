@@ -1,10 +1,15 @@
 package sync
 
 import (
-	"cerberus.com/ws-schedule-scraper/cmd/client"
+	"fmt"
+
 	"cerberus.com/ws-schedule-scraper/config"
 	"cerberus.com/ws-schedule-scraper/internal/dto"
 )
+
+type WebsiteClient interface {
+	GetEvents() []dto.WebSiteEvent
+}
 
 type CalendarClient interface {
 	GetEvents() []dto.CalendarEvent
@@ -13,9 +18,9 @@ type CalendarClient interface {
 	UpdateEvents([]dto.CalendarEvent)
 }
 
-func Execute(config *config.AppConfig, calendar CalendarClient) {
-	websiteEvents := client.GetEvents(config)
-	calendarEvents := calendar.GetEvents()
+func Execute(config *config.AppConfig, websiteClient WebsiteClient, calendarClient CalendarClient) {
+	websiteEvents := websiteClient.GetEvents()
+	calendarEvents := calendarClient.GetEvents()
 
 	// TEST/DEBUG ----------------------------------------------------
 	// fmt.Println("-------- WATER SPOTS WEBSITE EVENTS --------")
@@ -52,8 +57,9 @@ func Execute(config *config.AppConfig, calendar CalendarClient) {
 
 	for _, websiteEvent := range websiteEvents {
 		if existingCalendarEvent, found := calendarEventsByDate[websiteEvent.Date]; found {
-			if existingCalendarEvent.Summary != websiteEvent.String() {
-				existingCalendarEvent.Summary = websiteEvent.String()
+			webSiteEventSummary := websiteEvent.String()
+			if existingCalendarEvent.Summary != webSiteEventSummary {
+				existingCalendarEvent.Summary = webSiteEventSummary
 
 				eventsToUpdate = append(eventsToUpdate, existingCalendarEvent)
 			}
@@ -62,9 +68,28 @@ func Execute(config *config.AppConfig, calendar CalendarClient) {
 		}
 	}
 
-	calendar.DeleteEvents(eventsToDelete)
+	fmt.Println("-------- RESULTS --------")
+	fmt.Println("--- DELETES ---")
+	for _, e := range eventsToDelete {
+		fmt.Println(e.String())
+	}
+	fmt.Println()
 
-	calendar.CreateEvents(eventsToCreate)
+	fmt.Println("--- CREATES ---")
+	for _, e := range eventsToCreate {
+		fmt.Println(e.String())
+	}
+	fmt.Println()
 
-	calendar.UpdateEvents(eventsToUpdate)
+	fmt.Println("--- UPDATES ---")
+	for _, e := range eventsToUpdate {
+		fmt.Println(e.String())
+	}
+	fmt.Println()
+
+	calendarClient.DeleteEvents(eventsToDelete)
+
+	calendarClient.CreateEvents(eventsToCreate)
+
+	calendarClient.UpdateEvents(eventsToUpdate)
 }

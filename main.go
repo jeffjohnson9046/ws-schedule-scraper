@@ -14,7 +14,11 @@ func main() {
 		log.Fatalf("Error loading app configuration: %v", err)
 	}
 
-	googleCalendar := client.NewGoogleCalendarClient(appConfig)
+	websiteClient, err := client.NewWebsiteClient(appConfig)
+	if err != nil {
+		log.Fatalf("Error attempting to create website client: %v", err)
+	}
+	googleCalendarClient := client.NewGoogleCalendarClient(appConfig)
 
-	sync.Execute(appConfig, googleCalendar)
+	sync.Execute(appConfig, websiteClient, googleCalendarClient)
 }

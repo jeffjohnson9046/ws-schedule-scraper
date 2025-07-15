@@ -18,5 +18,5 @@ type WebSiteEvent struct {
 }
 
 func (wse *WebSiteEvent) String() string {
-	return fmt.Sprintf("Water Spots @ %s %s", wse.Venue, wse.Time)
+	return fmt.Sprintf("Water Spots @ %s (%s)", wse.Venue, wse.Time)
 }

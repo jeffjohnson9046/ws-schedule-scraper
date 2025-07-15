@@ -4,15 +4,29 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
 
 	"cerberus.com/ws-schedule-scraper/config"
 	"cerberus.com/ws-schedule-scraper/internal/dto"
 )
 
-func GetEvents(config *config.AppConfig) []dto.WebSiteEvent {
-	response, err := http.Get(config.WebsiteScheduleUrl)
+type WebsiteClient struct {
+	ScheduleUrl string
+}
+
+func NewWebsiteClient(config *config.AppConfig) (*WebsiteClient, error) {
+	url, err := url.Parse(config.WebsiteScheduleUrl)
 	if err != nil {
-		log.Fatalf("Error occurred getting JSON from %s: %v", config.WebsiteScheduleUrl, err)
+		return nil, err
+	}
+
+	return &WebsiteClient{ScheduleUrl: url.String()}, nil
+}
+
+func (wc *WebsiteClient) GetEvents() []dto.WebSiteEvent {
+	response, err := http.Get(wc.ScheduleUrl)
+	if err != nil {
+		log.Fatalf("Error occurred getting JSON from %s: %v", wc.ScheduleUrl, err)
 	}
 	defer response.Body.Close()
 
